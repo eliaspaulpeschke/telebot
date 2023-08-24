@@ -22,6 +22,6 @@ def echo_all(message):
     with open("res.ogg", "wb") as file:
         file.write(f.content)
     result = model.transcribe("res.ogg")
-    print(result["text"].replace(" Fragezeichen ", "? ").replace(" Komma ", ", ").replace(" Punkt ", ". "))
+    print(result["text"])
 
 bot.infinity_polling()
