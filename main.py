@@ -32,6 +32,8 @@ Known Commands:
     to content
     (without on/off
     just toggles)  
+/ls
+    list all files
 /save
     appends message to
     the selected file
@@ -104,6 +106,13 @@ def handle_date(message):
     else:
         bot.reply_to(message, "Usage: \n /datemode - toggle \n /datemode on - turn on \n /datemode off - turn off")
     bot.reply_to(message, f"Datemode is {'on' if state.datemode == True else 'off'}")
+    
+@bot.message_handler(commands=['ls'])
+def handle_ls(message):
+    global state
+    files = os.listdir(state.repo_path)
+    files.sort()
+    bot.reply_to(message, "Files in your Repo: \n\n" + "\n".join(files))
 
 def save_text(text):
         global state
