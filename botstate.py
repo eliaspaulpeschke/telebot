@@ -5,9 +5,6 @@ import pickle
 
 class Botstate:
     currentfile = ""
-    token = dotenv.get_key("./.env", "TOKEN")
-    allowed_ids = dotenv.get_key("./.env", "ALLOWED_USERIDS").split(":")
-    repo_path = dotenv.get_key("./.env", "REPO_PATH")
     data_storage = dotenv.get_key("./.env", "DATA_STORAGE")
     datemode = True
 
@@ -20,6 +17,8 @@ class Botstate:
                      setattr(self, k, getattr(instance, k))
         else:
             print("No storage file found - creating new state from scatch")
+        self.allowed_ids = dotenv.get_key("./.env", "ALLOWED_USERIDS").split(":")
+        self.repo_path = dotenv.get_key("./.env", "REPO_PATH")
 
     def save(self) -> None:
          with open(self.storage_path, "wb") as objfile:

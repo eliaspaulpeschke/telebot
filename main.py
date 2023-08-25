@@ -8,7 +8,8 @@ from botstate import Botstate
 
 
 state = Botstate()
-bot = telebot.TeleBot(state.token, parse_mode=None)
+token = dotenv.get_key("./.env", "TOKEN")
+bot = telebot.TeleBot(token, parse_mode=None)
 model = whisper.load_model("base")
 
 known_commands = ["Command Link", "Command Help"]
