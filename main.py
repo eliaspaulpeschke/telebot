@@ -20,11 +20,28 @@ def help(message):
     bot.reply_to(message, """
 Known Commands:
                  
-/name <filename>    -  set name of current file to append to
-/id                 -  check authorization
-/datemode [on|off]  -  toggle prepending time and date, on or off
+/name <filename>
+    set name of 
+    current file 
+    to append to
+/id 
+    check authorization
+/datemode [on|off]
+    prepending current
+    time and date
+    to content
+    (without on/off
+    just toggles)  
+/save
+    appends message to
+    the selected file
 
+all
+voice messages are
+transcribed to your
+file.
 """)
+                 
 @bot.message_handler(commands=["name"])
 def change_name(message):
     global state
