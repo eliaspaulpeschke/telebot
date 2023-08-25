@@ -7,6 +7,7 @@ import time
 
 currentfile = ""
 token = dotenv.get_key("./.env", "TOKEN")
+repo_path = dotenv.get_key("./.env", "REPO_PATH")
 bot = telebot.TeleBot(token, parse_mode=None)
 model = whisper.load_model("base")
 
@@ -33,7 +34,7 @@ def echo_all(message):
         file.write(f.content)
     result = model.transcribe("res.ogg")
     cwd = os.getcwd()
-    os.chdir("../General")
+    os.chdir(repo_path)
     os.system("git pull")
     with open(currentfile, "a") as file:
         file.write(time.strftime("\n%d.%m.%y - %H:%M:\n"))
