@@ -12,6 +12,7 @@ bot = telebot.TeleBot(token, parse_mode=None)
 model = whisper.load_model("base")
 
 
+
 @bot.message_handler(commands=['start', 'help', "name"])
 def send_welcome(message):
     global currentfile
@@ -43,4 +44,9 @@ def echo_all(message):
     os.chdir(cwd)
     bot.reply_to(message, f"Flename: {currentfile}\n\n{result['text']}")
 
-bot.infinity_polling()
+
+def main():
+    bot.infinity_polling()
+
+if __name__ == "__main__":
+    main()
