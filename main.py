@@ -48,7 +48,7 @@ file.
 @bot.message_handler(commands=["name"])
 def change_name(message):
     global state
-    if (message.text == ("/name now")):
+    if (message.text == "/name now" or message.text == "/name today"):
         state.setfile(time.strftime("%d_%m_%y_%H_%M.md"))
     else:
         name = str(message.text)
