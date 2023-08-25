@@ -1,5 +1,6 @@
 import dotenv
 import os
+import time
 import pickle
 
 class Botstate:
@@ -8,6 +9,7 @@ class Botstate:
     allowed_ids = dotenv.get_key("./.env", "ALLOWED_USERIDS").split(":")
     repo_path = dotenv.get_key("./.env", "REPO_PATH")
     data_storage = dotenv.get_key("./.env", "DATA_STORAGE")
+    datemode = True
 
     def __init__(self) -> None:
         self.storage_path = dotenv.get_key("./.env", "DATA_STORAGE")
@@ -26,3 +28,13 @@ class Botstate:
     def setfile(self, path):
         self.currentfile = path
         self.save()
+
+    def setdatemode(self, value):
+        self.datemode = value
+        self.save()
+
+    def handleText(self, text):
+        if (self.datemode):
+           return time.strftime("\n%d.%m.%y - %H:%M:\n") + text
+        else:
+           return text
