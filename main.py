@@ -25,10 +25,11 @@ Known Commands:
     set name of 
     current file 
     to append to
-/name [now|today]
+/name [now|today|daily]
     sets the files
     name to the current
     date and time
+    or only date for latter two
 /id 
     check authorization
 /datemode [on|off]
@@ -42,6 +43,12 @@ Known Commands:
 /save
     appends message to
     the selected file
+/note
+    appends message to
+    notes.md
+/daily
+    appends message to
+    dd_mm_yy.md
 
 all
 voice messages are
@@ -53,8 +60,10 @@ file.
 def change_name(message):
     global state
     if (str(message.from_user.id) in state.allowed_ids):
-        if (message.text == "/name now" or message.text == "/name today"):
+        if (message.text == "/name now"):
             state.setfile(time.strftime("%d_%m_%y_%H_%M.md"))
+        elif (message.text == "/name today" or message.text == "/name daily"):
+            state.setfile(time.strftime("%d_%m_%y.md"))
         else:
             name = str(message.text)
             name = name.removeprefix("/name")
@@ -122,16 +131,45 @@ def handle_ls(message):
        files = os.listdir(state.repo_path)
        files.sort()
        bot.reply_to(message, "Files in your Repo: \n\n" + "\n".join(files))
+       
+@bot.message_handler(content_types=['text'], commands=['note', "notes"])
+def handle_save(message):
+    global state
+    if (str(message.from_user.id) in state.allowed_ids):
+        text = message.text.removeprefix("/notes")
+        text = text.removeprefix("/note")
+        if state.datemode == False:
+            text = time.strftime("\n%d.%m.%y - %H:%M:\n") + text
+        text = state.handleText(text)
+        save_text(text, "notes.md")
+        bot.reply_to(message, f"Added to notes.md")
+        
+@bot.message_handler(content_types=['text'], commands=['daily'])
+def handle_save(message):
+    global state
+    if (str(message.from_user.id) in state.allowed_ids):
+        text = message.text.removeprefix("/daily")
+        if state.datemode == False:
+            text = time.strftime("\n%H:%M\n") + text
+        text = state.handleText(text)
+        save_text(text, time.strftime("%d_%m_%y.md"))
+        bot.reply_to(message, f"Added to {time.strftime('%d_%m_%y.md')}")
 
-def save_text(text):
+def save_text(text, filename=None):
         global state
         cwd = os.getcwd()
         os.chdir(state.repo_path)
         os.system("git pull")
-        with open(state.currentfile, "a") as file:
+        if (filename == None):
+            filename  = state.currentfile
+        with open(filename, "a") as file:
             file.write(text)
         os.system("git add . && git commit -m 'update' && git push")
         os.chdir(cwd)
+
+
+
+    
     
 def main():
     bot.infinity_polling()
