@@ -207,7 +207,7 @@ def handle_save(message):
 
 def allowed_path(path):
     global state
-    if (";" in path) or ("&&" in path) or ("&" in path) or ("|" in path) or ("||" in path) or (">" in path) or ("<" in path):
+    if (";" in path) or ("&&" in path) or ("&" in path) or ("|" in path) or ("||" in path) or (">" in path) or ("<" in path) or ("`" in path) or ("'" in path) or ('"' in path) or ("$" in path) or ("@" in path):
         return False
     if str(path).startswith("./") or str(path).startswith("..") or str(path).startswith("/"):
         return False
