@@ -118,7 +118,7 @@ def handle_date(message):
             state.setdatemode(not state.datemode)
         elif(message.text == "/datemode off"):
             state.setdatemode(False)
-        elif(message.text == "/datemode off"):
+        elif(message.text == "/datemode on"):
             state.setdatemode(True)
         else:
             bot.reply_to(message, "Usage: \n /datemode - toggle \n /datemode on - turn on \n /datemode off - turn off")
@@ -167,9 +167,36 @@ def save_text(text, filename=None):
         os.system("git add . && git commit -m 'update' && git push")
         os.chdir(cwd)
 
+@bot.message_handler(content_types=['text'], commands=['mv'])
+def handle_save(message):
+    global state
+    if (str(message.from_user.id) in state.allowed_ids):
+        text = message.text.removeprefix("/mv")
+        text = text.strip()
+        cmds = text.split(" ")
+        if (len(cmds) == 2):
+            if allowed_path(cmds[0]) and  allowed_path(cmds[1]):
+                cwd = os.getcwd()
+                os.chdir(state.repo_path)
+                os.system("git pull")
+                os.system(f"mv {cmds[0]} {cmds[1]}")
+                os.system("git add . && git commit -m 'update' && git push")
+                os.chdir(cwd)
+                files = os.listdir(state.repo_path)
+                files.sort()
+                bot.reply_to(message, "Files in your Repo: \n\n" + "\n".join(files))
+       
 
-
-    
+def allowed_path(path):
+    global state
+    if (";" in path) or ("&&" in path) or ("&" in path) or ("|" in path) or ("||" in path) or (">" in path) or ("<" in path):
+        return False
+    if str(path).startswith("./") or str(path).startswith("..") or str(path).startswith("/"):
+        return False
+    path = state.repo_path + "/" + path
+    if not (os.path.isfile(path) or os.path.isdir(path)):
+        return False
+    return True
     
 def main():
     bot.infinity_polling()
