@@ -40,6 +40,9 @@ Known Commands:
     just toggles)  
 /ls
     list all files
+/mv relative/path/1 relative/path/2 [!override]
+    moves path1 to path2
+    overrides when override flag is set
 /save
     appends message to
     the selected file
@@ -49,6 +52,7 @@ Known Commands:
 /daily
     appends message to
     dd_mm_yy.md
+    
 
 all
 voice messages are
@@ -173,28 +177,39 @@ def handle_save(message):
     if (str(message.from_user.id) in state.allowed_ids):
         text = message.text.removeprefix("/mv")
         text = text.strip()
+        override = False
+        if text.endswith("!override"):
+            override = True
+        text = text.removesuffix("!override")
         cmds = text.split(" ")
         if (len(cmds) == 2):
             if allowed_path(cmds[0]) and  allowed_path(cmds[1]):
-                cwd = os.getcwd()
-                os.chdir(state.repo_path)
-                os.system("git pull")
-                os.system(f"mv {cmds[0]} {cmds[1]}")
-                os.system("git add . && git commit -m 'update' && git push")
-                os.chdir(cwd)
-                files = os.listdir(state.repo_path)
-                files.sort()
-                bot.reply_to(message, "Files in your Repo: \n\n" + "\n".join(files))
-       
+                if os.path.exists(state.repo_path + "/" + cmds[0]):
+                    if (not os.path.exists(state.repo_path + "/" + cmds[1])) or override:
+                        cwd = os.getcwd()
+                        os.chdir(state.repo_path)
+                        os.system("git pull")
+                        os.system(f"mv {cmds[0]} {cmds[1]}")
+                        os.system("git add . && git commit -m 'update' && git push")
+                        os.chdir(cwd)
+                        files = os.listdir(state.repo_path)
+                        files.sort()
+                        bot.reply_to(message, "Files in your Repo: \n\n" + "\n".join(files))
+                    else:
+                        bot.reply_to(message, f"Path {cmds[1]} does exist. Append !override to the message to override it")
+                else:
+                    bot.reply_to(message, f"Path {cmds[0]} does not exist")
+            else:
+                bot.reply_to(message, f"Path {cmds[0]} {'is not allowed' if not allowed_path(cmds[0]) else 'is allowed'} \n Path {cmds[1]} {'is not allowed' if not allowed_path(cmds[1]) else 'is allowed'}")
+        else:
+            bot.reply_to(message, f"Two many commands - Syntax: \n /mv relative/path/1 relative/path/2")
+           
 
 def allowed_path(path):
     global state
     if (";" in path) or ("&&" in path) or ("&" in path) or ("|" in path) or ("||" in path) or (">" in path) or ("<" in path):
         return False
     if str(path).startswith("./") or str(path).startswith("..") or str(path).startswith("/"):
-        return False
-    path = state.repo_path + "/" + path
-    if not (os.path.isfile(path) or os.path.isdir(path)):
         return False
     return True
     
