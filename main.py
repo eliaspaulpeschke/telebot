@@ -80,7 +80,6 @@ def change_name(message):
             name = name.removeprefix("/name")
             name = name.strip()
             name = name.casefold()
-            print(name)
             if (not name.isspace()) and (not name == ""):
                 name = name.replace(" ", "_")
                 state.file = name + ".md"
@@ -102,7 +101,6 @@ def handle_id(message):
 def handle_voicemsg(message):
     global state
     if (str(message.from_user.id) in state.allowed_ids):
-        print(message.voice.file_id)
         url = bot.get_file_url(message.voice.file_id)
         res = requests.get(url, allow_redirects=True)
         with open("res.ogg", "wb") as f:
@@ -146,6 +144,7 @@ def handle_flag(message):
             val = False
         elif rest.strip() != "" and cmd == "lang":
             val = rest.strip()
+            print(val)
         elif not cmd == "lang":
             val = not state.__getattribute__(attrib)
         else:
