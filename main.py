@@ -85,6 +85,7 @@ def change_name(message):
                 bot.reply_to(message, "Please give a filename - syntax:\n /name <filename>")
         bot.reply_to(message, f"Current file name: {state.currentfile}")
 
+
 @bot.message_handler(commands=['id'])
 def handle_id(message):
     global state
@@ -93,6 +94,7 @@ def handle_id(message):
     else:
         bot.reply_to(message, f"Invalid, your ID is {message.from_user.id}. If you're an admin, add it to ALLOWED_USERIDS in your .env-file.")
         
+
 @bot.message_handler(content_types=["voice"])
 def handle_voicemsg(message):
     global state
@@ -123,11 +125,17 @@ def handle_save(message):
         save_text(text)
         bot.reply_to(message, f"Appended your text to {state.currentfile}")
 
+
 @bot.message_handler(commands=["datemode", "keepspeech"])
 def handle_flag(message):
     global state
     if (str(message.from_user.id) in state.allowed_ids):
-        cmd, rest, *trash = message.text.split(" ")
+        text = message.text.split(" ")
+        cmd = text[0]
+        if len(text) > 1:
+            rest = text[1]
+        else:
+            rest = ""
         attrib = cmd.strip().removeprefix("/")
         if rest.strip() == "on":
             val = True
