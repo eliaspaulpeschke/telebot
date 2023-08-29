@@ -36,7 +36,7 @@ class Botstate:
     
     @file.setter
     def file(self, path):
-        self._currentfile = path
+        self._file = path
         self.save()
 
     @property
