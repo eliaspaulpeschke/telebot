@@ -83,7 +83,7 @@ def change_name(message):
                 state.file = name + ".md"
             else:
                 bot.reply_to(message, "Please give a filename - syntax:\n /name <filename>")
-        bot.reply_to(message, f"Current file name: {state.currentfile}")
+        bot.reply_to(message, f"Current file name: {state.file}")
 
 
 @bot.message_handler(commands=['id'])
@@ -113,7 +113,7 @@ def handle_voicemsg(message):
             filename = time.strftime("%d-%m-%y-%H-%M-") + str(time.time()).replace(".", "_") + ".mp3"
             os.system(f"ffmpeg -y -i res.ogg {filename}")
         os.system("rm res.wav")
-        bot.reply_to(message, f"Flename: {state.currentfile}\n\n{text}")
+        bot.reply_to(message, f"Flename: {state.file}\n\n{text}")
 
 
 @bot.message_handler(content_types=['text'], commands=['save'])
@@ -123,7 +123,7 @@ def handle_save(message):
         text = message.text.removeprefix("/save")
         text = state.handleText(text)
         save_text(text)
-        bot.reply_to(message, f"Appended your text to {state.currentfile}")
+        bot.reply_to(message, f"Appended your text to {state.file}")
 
 
 @bot.message_handler(commands=["datemode", "keepspeech"])
@@ -183,7 +183,7 @@ def save_text(text, filename=None):
         os.chdir(state.repo_path)
         os.system("git pull")
         if (filename == None):
-            filename  = state.currentfile
+            filename  = state.file
         with open(filename, "a") as file:
             file.write(text)
         os.system("git add . && git commit -m 'update' && git push")
