@@ -22,6 +22,9 @@ class Botstate:
         #always load these from disk!
         self.allowed_ids = dotenv.get_key("./.env", "ALLOWED_USERIDS").split(":")
         self.repo_path = dotenv.get_key("./.env", "REPO_PATH")
+        if not os.path.isfile(self.storage_path):
+            self.save()
+
 
     def save(self) -> None:
          with open(self.storage_path, "wb") as objfile:
