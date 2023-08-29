@@ -139,14 +139,14 @@ def handle_flag(message):
             rest = ""
         print(message, "\n", cmd, "\n", rest, "\n\n", text)
         attrib = cmd.strip().removeprefix("/")
-        if rest.strip() == "on":
+        if rest == "on":
             val = True
-        elif rest.strip() == "off":
+        elif rest == "off":
             val = False
-        elif rest.strip() != "" and cmd == "lang":
+        elif rest != "" and attrib == "lang":
             val = rest.strip()
             print(val)
-        elif not cmd == "lang":
+        elif not attrib == "lang":
             val = not state.__getattribute__(attrib)
         else:
             return
