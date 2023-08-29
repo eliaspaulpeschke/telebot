@@ -69,9 +69,9 @@ def change_name(message):
     global state
     if (str(message.from_user.id) in state.allowed_ids):
         if (message.text == "/name now"):
-            state.setfile(time.strftime("%d_%m_%y_%H_%M.md"))
+            state.file = time.strftime("%d_%m_%y_%H_%M.md")
         elif (message.text == "/name today" or message.text == "/name daily"):
-            state.setfile(time.strftime("%d_%m_%y.md"))
+            state.file = time.strftime("%d_%m_%y.md")
         else:
             name = str(message.text)
             name = name.removeprefix("/name")
@@ -80,7 +80,7 @@ def change_name(message):
             print(name)
             if (not name.isspace()) and (not name == ""):
                 name = name.replace(" ", "_")
-                state.setfile(name + ".md")
+                state.file = name + ".md"
             else:
                 bot.reply_to(message, "Please give a filename - syntax:\n /name <filename>")
         bot.reply_to(message, f"Current file name: {state.currentfile}")
