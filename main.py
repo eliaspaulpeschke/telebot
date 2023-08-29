@@ -114,7 +114,7 @@ def handle_voicemsg(message):
         save_text(text)
         if state.keepspeech:
             filename = time.strftime("%d-%m-%y-%H-%M-") + str(time.time()).replace(".", "_") + ".mp3"
-            os.system(f"ffmpeg -y -i res.ogg {filename}"
+            os.system(f"ffmpeg -y -i res.ogg {filename}")
         os.system("rm res.wav")
         bot.reply_to(message, f"Flename: {state.file}\n\n{text}")
 
