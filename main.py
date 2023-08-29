@@ -145,7 +145,7 @@ def handle_flag(message):
             val = False
         elif rest != "" and attrib == "lang":
             val = rest.strip()
-            print(val)
+            #print(val)
         elif not attrib == "lang":
             val = not state.__getattribute__(attrib)
         else:
