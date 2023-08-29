@@ -137,7 +137,7 @@ def handle_flag(message):
             rest = text[1]
         else:
             rest = ""
-        print(message, "\n", cmd, "\n", rest, "\n\n", text)
+        #print(message, "\n", cmd, "\n", rest, "\n\n", text)
         attrib = cmd.strip().removeprefix("/")
         if rest == "on":
             val = True
