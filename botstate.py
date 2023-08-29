@@ -8,6 +8,7 @@ class Botstate:
     data_storage = dotenv.get_key("./.env", "DATA_STORAGE")
     _datemode = True
     _keepspeech = False
+    _lang = "de"
 
     def __init__(self) -> None:
         self.storage_path = dotenv.get_key("./.env", "DATA_STORAGE")
@@ -56,6 +57,16 @@ class Botstate:
     def keepspeech(self, value):
         self._keepspeech = value
         self.save()
+
+    @property
+    def lang(self):
+        return self._lang
+    
+    @lang.setter
+    def lang(self, value):
+        if value in ["de", "en", "fr", "it", "auto"]:
+            self._lang = value
+            self.save()
 
     def handleText(self, text):
         if (self._datemode):

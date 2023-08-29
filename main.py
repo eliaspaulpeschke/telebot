@@ -41,6 +41,9 @@ Known Commands:
     with a timestamp
     - theyre still 
     also transcribed
+/lang de|en|it|fr|auto
+    set language mode
+    for audio transcription
 /ls
     list all files
 /mv relative/path/1 relative/path/2 [!override]
@@ -105,7 +108,7 @@ def handle_voicemsg(message):
         with open("res.ogg", "wb") as f:
             f.write(res.content)
         os.system("ffmpeg -y -i res.ogg -ar 16000 -ac 1 -c:a pcm_s16le res.wav")
-        os.system("/home/pi/whisper.cpp/main -m /home/pi/whisper.cpp/models/ggml-small-q5.bin -l auto -otxt -of res res.wav")
+        os.system(f"/home/pi/whisper.cpp/main -m /home/pi/whisper.cpp/models/ggml-small-q5.bin -l {state.lang} -otxt -of res res.wav")
         with open("res.txt", "r") as txt:
             text = state.handleText("\n".join(txt.readlines()))
         save_text(text)
@@ -126,7 +129,7 @@ def handle_save(message):
         bot.reply_to(message, f"Appended your text to {state.file}")
 
 
-@bot.message_handler(commands=["datemode", "keepspeech"])
+@bot.message_handler(commands=["datemode", "keepspeech", "lang"])
 def handle_flag(message):
     global state
     if (str(message.from_user.id) in state.allowed_ids):
@@ -141,10 +144,14 @@ def handle_flag(message):
             val = True
         elif rest.strip() == "off":
             val = False
-        else:
+        elif rest.strip() != "" and cmd == "lang":
+            val = rest.strip()
+        elif not cmd == "lang":
             val = not state.__getattribute__(attrib)
+        else:
+            return
         state.__setattr__(attrib, val)
-        bot.reply_to(message, f"{attrib} set to {'on' if val else 'off'}")
+        bot.reply_to(message, f"{attrib} set to {state.__getattribute__(attrib) if type(val) == str else 'on' if val else 'off'}")
     
 @bot.message_handler(commands=['ls'])
 def handle_ls(message):
