@@ -1,7 +1,6 @@
 import dotenv
 import telebot
 import requests
-import whisper
 import os
 import time
 from botstate import Botstate
@@ -10,9 +9,6 @@ from botstate import Botstate
 state = Botstate()
 token = dotenv.get_key("./.env", "TOKEN")
 bot = telebot.TeleBot(token, parse_mode=None)
-model = whisper.load_model("base")
-
-known_commands = ["Command Link", "Command Help"]
 
 
 
@@ -38,6 +34,13 @@ Known Commands:
     to content
     (without on/off
     just toggles)  
+/keepspeech [on|off]
+    works like datemode
+    but for keeping voice
+    messages as mp3
+    with a timestamp
+    - theyre still 
+    also transcribed
 /ls
     list all files
 /mv relative/path/1 relative/path/2 [!override]
@@ -52,6 +55,7 @@ Known Commands:
 /daily
     appends message to
     dd_mm_yy.md
+
     
 
 all
@@ -96,12 +100,18 @@ def handle_voicemsg(message):
     if (str(message.from_user.id) in state.allowed_ids):
         print(message.voice.file_id)
         url = bot.get_file_url(message.voice.file_id)
-        f = requests.get(url, allow_redirects=True)
-        with open("res.ogg", "wb") as file:
-            file.write(f.content)
-        result = model.transcribe("res.ogg")
-        text = state.handleText(result["text"])
+        res = requests.get(url, allow_redirects=True)
+        with open("res.ogg", "wb") as f:
+            f.write(res.content)
+        os.system("ffmpeg -y -i res.ogg -ar 16000 -ac 1 -c:a pcm_s16le res.wav")
+        os.system("/home/pi/whisper.cpp/main -m /home/pi/whisper.cpp/models/ggml-small-q5.bin -l auto -otxt -of res res.wav")
+        with open("res.txt", "r") as txt:
+            text = state.handleText("\n".join(txt.readlines()))
         save_text(text)
+        if state.keepspeech:
+            filename = time.strftime("%d-%m-%y-%H-%M-") + str(time.time()).replace(".", "_") + ".mp3"
+            os.system(f"ffmpeg -y -i res.ogg {filename}")
+        os.system("rm res.wav")
         bot.reply_to(message, f"Flename: {state.currentfile}\n\n{text}")
 
 
@@ -112,7 +122,7 @@ def handle_save(message):
         text = message.text.removeprefix("/save")
         text = state.handleText(text)
         save_text(text)
-        bot.reply_to(message, f"Appendedd your text to {state.currentfile}")
+        bot.reply_to(message, f"Appended your text to {state.currentfile}")
     
 @bot.message_handler(commands=['datemode'])
 def handle_date(message):
@@ -127,6 +137,20 @@ def handle_date(message):
         else:
             bot.reply_to(message, "Usage: \n /datemode - toggle \n /datemode on - turn on \n /datemode off - turn off")
         bot.reply_to(message, f"Datemode is {'on' if state.datemode == True else 'off'}")
+     
+@bot.message_handler(commands=['keepspeech'])
+def handle_date(message):
+    global state
+    if (str(message.from_user.id) in state.allowed_ids):
+        if(message.text == "/keepspeech"):
+            state.setkeepspeech(not state.keepspeech)
+        elif(message.text == "/keepspeech off"):
+            state.setkeepspeech(False)
+        elif(message.text == "/keepspeech on"):
+            state.setkeepspeech(True)
+        else:
+            bot.reply_to(message, "Usage: \n /keepspeech - toggle \n /keepspeech on - turn on \n /keepspeech off - turn off")
+        bot.reply_to(message, f"Keepspeech is {'on' if state.keepspeech == True else 'off'}")
     
 @bot.message_handler(commands=['ls'])
 def handle_ls(message):
