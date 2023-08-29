@@ -1,3 +1,6 @@
 .env
 *.ogg
+*.mp3
+*.wav
 *.pickle
+res.txt
