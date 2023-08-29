@@ -92,7 +92,6 @@ def handle_id(message):
         bot.reply_to(message, "You are an authorized user.")
     else:
         bot.reply_to(message, f"Invalid, your ID is {message.from_user.id}. If you're an admin, add it to ALLOWED_USERIDS in your .env-file.")
-
         
 @bot.message_handler(content_types=["voice"])
 def handle_voicemsg(message):
@@ -123,34 +122,21 @@ def handle_save(message):
         text = state.handleText(text)
         save_text(text)
         bot.reply_to(message, f"Appended your text to {state.currentfile}")
-    
-@bot.message_handler(commands=['datemode'])
-def handle_date(message):
+
+@bot.message_handler(commands=["datemode", "keepspeech"])
+def handle_flag(message):
     global state
     if (str(message.from_user.id) in state.allowed_ids):
-        if(message.text == "/datemode"):
-            state.setdatemode(not state.datemode)
-        elif(message.text == "/datemode off"):
-            state.setdatemode(False)
-        elif(message.text == "/datemode on"):
-            state.setdatemode(True)
+        cmd, rest, *trash = message.text.split(" ")
+        attrib = cmd.strip().removeprefix("/")
+        if rest.strip() == "on":
+            val = True
+        elif rest.strip() == "off":
+            val = False
         else:
-            bot.reply_to(message, "Usage: \n /datemode - toggle \n /datemode on - turn on \n /datemode off - turn off")
-        bot.reply_to(message, f"Datemode is {'on' if state.datemode == True else 'off'}")
-     
-@bot.message_handler(commands=['keepspeech'])
-def handle_date(message):
-    global state
-    if (str(message.from_user.id) in state.allowed_ids):
-        if(message.text == "/keepspeech"):
-            state.setkeepspeech(not state.keepspeech)
-        elif(message.text == "/keepspeech off"):
-            state.setkeepspeech(False)
-        elif(message.text == "/keepspeech on"):
-            state.setkeepspeech(True)
-        else:
-            bot.reply_to(message, "Usage: \n /keepspeech - toggle \n /keepspeech on - turn on \n /keepspeech off - turn off")
-        bot.reply_to(message, f"Keepspeech is {'on' if state.keepspeech == True else 'off'}")
+            val = not state.__getattribute__(attrib)
+        state.__setattr__(attrib, val)
+        bot.reply_to(message, f"{attrib} set to {'on' if val else 'off'}")
     
 @bot.message_handler(commands=['ls'])
 def handle_ls(message):
@@ -161,7 +147,7 @@ def handle_ls(message):
        bot.reply_to(message, "Files in your Repo: \n\n" + "\n".join(files))
        
 @bot.message_handler(content_types=['text'], commands=['note', "notes"])
-def handle_save(message):
+def handle_note(message):
     global state
     if (str(message.from_user.id) in state.allowed_ids):
         text = message.text.removeprefix("/notes")
@@ -196,7 +182,7 @@ def save_text(text, filename=None):
         os.chdir(cwd)
 
 @bot.message_handler(content_types=['text'], commands=['mv'])
-def handle_save(message):
+def handle_move(message):
     global state
     if (str(message.from_user.id) in state.allowed_ids):
         text = message.text.removeprefix("/mv")
@@ -206,32 +192,33 @@ def handle_save(message):
             override = True
         text = text.removesuffix("!override")
         cmds = text.split(" ")
-        if (len(cmds) == 2):
-            if allowed_path(cmds[0]) and  allowed_path(cmds[1]):
-                if os.path.exists(state.repo_path + "/" + cmds[0]):
-                    if (not os.path.exists(state.repo_path + "/" + cmds[1])) or override:
-                        cwd = os.getcwd()
-                        os.chdir(state.repo_path)
-                        os.system("git pull")
-                        os.system(f"mv {cmds[0]} {cmds[1]}")
-                        os.system("git add . && git commit -m 'update' && git push")
-                        os.chdir(cwd)
-                        files = os.listdir(state.repo_path)
-                        files.sort()
-                        bot.reply_to(message, "Files in your Repo: \n\n" + "\n".join(files))
-                    else:
-                        bot.reply_to(message, f"Path {cmds[1]} does exist. Append !override to the message to override it")
-                else:
-                    bot.reply_to(message, f"Path {cmds[0]} does not exist")
-            else:
-                bot.reply_to(message, f"Path {cmds[0]} {'is not allowed' if not allowed_path(cmds[0]) else 'is allowed'} \n Path {cmds[1]} {'is not allowed' if not allowed_path(cmds[1]) else 'is allowed'}")
-        else:
+        if not (len(cmds) == 2):
             bot.reply_to(message, f"Two many commands - Syntax: \n /mv relative/path/1 relative/path/2")
-           
+            return
+        if not (allowed_path(cmds[0]) and  allowed_path(cmds[1])):
+            bot.reply_to(message, f"Path {cmds[0]} {'is not allowed' if not allowed_path(cmds[0]) else 'is allowed'} \
+                         \n Path {cmds[1]} {'is not allowed' if not allowed_path(cmds[1]) else 'is allowed'}")
+            return
+        if not (os.path.exists(state.repo_path + "/" + cmds[0])):
+            bot.reply_to(message, f"Path {cmds[0]} does not exist")
+            return
+        if (os.path.exists(state.repo_path + "/" + cmds[1])) and not override:
+            bot.reply_to(message, f"Path {cmds[1]} does exist. Append !override to the message to override it")
+            return
+        cwd = os.getcwd()
+        os.chdir(state.repo_path)
+        os.system("git pull")
+        os.system(f"mv {cmds[0]} {cmds[1]}")
+        os.system("git add . && git commit -m 'update' && git push")
+        os.chdir(cwd)
+        files = os.listdir(state.repo_path)
+        files.sort()
+        bot.reply_to(message, "Files in your Repo: \n\n" + "\n".join(files))
 
 def allowed_path(path):
     global state
-    if (";" in path) or ("&&" in path) or ("&" in path) or ("|" in path) or ("||" in path) or (">" in path) or ("<" in path) or ("`" in path) or ("'" in path) or ('"' in path) or ("$" in path) or ("@" in path):
+    forbidden = [";", "&", "|", ">", "<", "`", '"', "'", "$", "@", "%", "{", "}", "[", "]", "?", "^", "~", ",", "=", "´"]
+    if any([(x in path) for x in forbidden]):
         return False
     if str(path).startswith("./") or str(path).startswith("..") or str(path).startswith("/"):
         return False
