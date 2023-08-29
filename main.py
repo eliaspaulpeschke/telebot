@@ -108,7 +108,7 @@ def handle_voicemsg(message):
         with open("res.ogg", "wb") as f:
             f.write(res.content)
         os.system("ffmpeg -y -i res.ogg -ar 16000 -ac 1 -c:a pcm_s16le res.wav")
-        os.system(f"/home/pi/whisper.cpp/main -m /home/pi/whisper.cpp/models/ggml-small-q5.bin -l {state.lang} -otxt -of res res.wav")
+        os.system(f"{state.whisper_path} -m {state.whisper_model} -l {state.lang} -otxt -of res res.wav")
         with open("res.txt", "r") as txt:
             text = state.handleText("\n".join(txt.readlines()))
         save_text(text)

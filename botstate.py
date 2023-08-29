@@ -23,6 +23,10 @@ class Botstate:
         #always load these from disk!
         self.allowed_ids = dotenv.get_key("./.env", "ALLOWED_USERIDS").split(":")
         self.repo_path = dotenv.get_key("./.env", "REPO_PATH")
+        self.whisper_path = dotenv.get_key("./.env", "WHISPER_PATH")
+        self.whisper_model = dotenv.get_key("./.env", "WHISPER_MODEL")
+
+
         if not os.path.isfile(self.storage_path):
             self.save()
 
