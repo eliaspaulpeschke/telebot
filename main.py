@@ -252,19 +252,19 @@ def handle_move(message):
     files.sort()
     bot.reply_to(message, "Files in your Repo: \n\n" + "\n".join(files))
 
-def read_file(path, n: int | None = None, m: int | None = None):
+def read_file(path, n = None, m = None):
     with open(path) as f:
         lines = f.readlines()
         if n is None and m is None:
             return "\n".join(lines)
         elif n is not None and m is None:
-            return "\n".join(lines[:-n])
+            return "\n".join(lines[-int(n):])
         elif n is not None and m is not None:
-            return "\n".join(lines[n-1:m-1])
+            return "\n".join(lines[int(n)-1:int(m)-1])
         else:
             return "\n".join(lines)
 
-@bot.message_handler(content_types=['text'], commands=['/cat'])
+@bot.message_handler(content_types=['text'], commands=['cat'])
 def handle_cat(message):
     global state
     if not check_user(message): return
@@ -273,9 +273,9 @@ def handle_cat(message):
     if not allowed_path(path):
         bot.reply_to(message, "Invalid path.")
         return
-    bot.reply_to(message, read_file(path))
+    bot.reply_to(message, read_file(os.path.join(state.repo_path, path)))
 
-@bot.message_handler(content_types=['text'], commands=['/tail'])
+@bot.message_handler(content_types=['text'], commands=['tail'])
 def handle_tail(message):
     global state
     if not check_user(message): return
@@ -285,11 +285,11 @@ def handle_tail(message):
         bot.reply_to(message, "Invalid path.")
         return
     if len(nums) == 0:
-        bot.reply_to(message, read_file(path, n=10))
+        bot.reply_to(message, read_file(os.path.join(state.repo_path, path), n=10))
     if len(nums) == 1:
-        bot.reply_to(message, read_file(path, n=nums[0]))
+        bot.reply_to(message, read_file(os.path.join(state.repo_path, path), n=nums[0]))
     if len(nums) == 2:
-        bot.reply_to(message, read_file(path, n=nums[0], m=nums[1]))
+        bot.reply_to(message, read_file(os.path.join(state.repo_path, path), n=nums[0], m=nums[1]))
 
 @bot.message_handler(func=lambda x: True)
 def catchall(message):
