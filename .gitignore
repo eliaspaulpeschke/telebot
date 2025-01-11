@@ -4,3 +4,5 @@
 *.wav
 *.pickle
 res.txt
+__pycache__
+.venv
