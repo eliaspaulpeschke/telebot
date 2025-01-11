@@ -79,6 +79,13 @@ def check_user(message):
         return True
     return False
 
+def process_text(text):
+    if (state.datemode):
+       return f"\n({time.time()}) - " + time.strftime("%d.%m.%y - %H:%M:\n") + text
+    else:
+        if not text.startswith("\n"): text = "\n" + text
+        return text
+
 def save_text(text, filename=None):
         global state
         cwd = os.getcwd()
@@ -141,7 +148,7 @@ def handle_voicemsg(message):
     os.system("ffmpeg -y -i res.ogg -ar 16000 -ac 1 -c:a pcm_s16le res.wav")
     os.system(f"{state.whisper_path} -m {state.whisper_model} -l {state.lang} -otxt -of res res.wav")
     with open("res.txt", "r") as txt:
-        text = state.handleText("\n".join(txt.readlines()))
+        text = process_text("\n".join(txt.readlines()))
     save_text(text)
     if state.keepspeech:
         filename = time.strftime("%d-%m-%y-%H-%M-") + str(time.time()).replace(".", "_") + ".mp3"
@@ -155,7 +162,7 @@ def handle_save(message):
     global state
     if not check_user(message): return
     text = message.text.removeprefix("/save")
-    text = state.handleText(text)
+    text = process_text(text)
     save_text(text)
     bot.reply_to(message, f"Appended your text to {state.file}")
 
@@ -203,7 +210,7 @@ def handle_note(message):
     text = text.removeprefix("/note")
     if state.datemode == False:
         text = time.strftime("\n%d.%m.%y - %H:%M:\n") + text
-    text = state.handleText(text)
+    text = process_text(text)
     save_text(text, "notes.md")
     bot.reply_to(message, f"Added to notes.md")
     
@@ -214,7 +221,7 @@ def handle_daily(message):
     text = message.text.removeprefix("/daily")
     if state.datemode == False:
         text = time.strftime("\n%H:%M\n") + text
-    text = state.handleText(text)
+    text = process_text(text)
     save_text(text, time.strftime("%d_%m_%y.md"))
     bot.reply_to(message, f"Added to {time.strftime('%d_%m_%y.md')}")
 
