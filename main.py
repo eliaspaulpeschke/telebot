@@ -9,9 +9,9 @@ from botstate import Botstate
 
 
 state = Botstate()
-token = dotenv.get_key("./.env", "TOKEN")
+dotenv.load_dotenv()
+token = os.environ.get("TOKEN", "")
 bot = telebot.TeleBot(token, parse_mode=None)
-
 
 
 @bot.message_handler(commands=["start", "help"])
@@ -60,6 +60,12 @@ Known Commands:
 /daily
     appends message to
     dd_mm_yy.md
+/cat file
+    prints file's content to telegram
+/tail file n
+    prints n last lines of file's content
+/tail file n m
+    prints lines n to m of file
 
 all
 voice messages are
@@ -72,7 +78,28 @@ def check_user(message):
     if (str(message.from_user.id) in state.allowed_ids):
         return True
     return False
-                 
+
+def save_text(text, filename=None):
+        global state
+        cwd = os.getcwd()
+        os.chdir(state.repo_path)
+        os.system("git pull")
+        if (filename == None):
+            filename  = state.file
+        with open(filename, "a") as file:
+            file.write(text)
+        os.system("git add . && git commit -m 'update' && git push")
+        os.chdir(cwd)
+
+def allowed_path(path):
+    global state
+    forbidden = [";", "&", "|", ">", "<", "`", '"', "'", "$", "@", "%", "{", "}", "[", "]", "?", "^", "~", ",", "=", "´"]
+    if any([(x in path) for x in forbidden]):
+        return False
+    if str(path).startswith("./") or str(path).startswith("..") or str(path).startswith("/"):
+        return False
+    return True
+
 @bot.message_handler(commands=["name"])
 def change_name(message):
     global state
@@ -191,28 +218,10 @@ def handle_daily(message):
     save_text(text, time.strftime("%d_%m_%y.md"))
     bot.reply_to(message, f"Added to {time.strftime('%d_%m_%y.md')}")
 
-def save_text(text, filename=None):
-        global state
-        cwd = os.getcwd()
-        os.chdir(state.repo_path)
-        os.system("git pull")
-        if (filename == None):
-            filename  = state.file
-        with open(filename, "a") as file:
-            file.write(text)
-        os.system("git add . && git commit -m 'update' && git push")
-        os.chdir(cwd)
 
 @bot.message_handler(content_types=['text'], commands=['mv'])
 def handle_move(message):
     global state
-    text = message.text.removeprefix("/daily")
-    if state.datemode == False:
-        text = time.strftime("\n%H:%M\n") + text
-    text = state.handleText(text)
-    save_text(text, time.strftime("%d_%m_%y.md"))
-    bot.reply_to(message, f"Added to {time.strftime('%d_%m_%y.md')}")
-
     text = message.text.removeprefix("/mv")
     text = text.strip()
     override = False
@@ -243,14 +252,48 @@ def handle_move(message):
     files.sort()
     bot.reply_to(message, "Files in your Repo: \n\n" + "\n".join(files))
 
-def allowed_path(path):
+def read_file(path, n: int | None = None, m: int | None = None):
+    with open(path) as f:
+        lines = f.readlines()
+        if n is None and m is None:
+            return "\n".join(lines)
+        elif n is not None and m is None:
+            return "\n".join(lines[:-n])
+        elif n is not None and m is not None:
+            return "\n".join(lines[n-1:m-1])
+        else:
+            return "\n".join(lines)
+
+@bot.message_handler(content_types=['text'], commands=['/cat'])
+def handle_cat(message):
     global state
-    forbidden = [";", "&", "|", ">", "<", "`", '"', "'", "$", "@", "%", "{", "}", "[", "]", "?", "^", "~", ",", "=", "´"]
-    if any([(x in path) for x in forbidden]):
-        return False
-    if str(path).startswith("./") or str(path).startswith("..") or str(path).startswith("/"):
-        return False
-    return True
+    if not check_user(message): return
+
+    _, path = message.text.strip().split(" ")
+    if not allowed_path(path):
+        bot.reply_to(message, "Invalid path.")
+        return
+    bot.reply_to(message, read_file(path))
+
+@bot.message_handler(content_types=['text'], commands=['/tail'])
+def handle_tail(message):
+    global state
+    if not check_user(message): return
+
+    _, path, *nums = message.text.strip().split(" ")
+    if not allowed_path(path):
+        bot.reply_to(message, "Invalid path.")
+        return
+    if len(nums) == 0:
+        bot.reply_to(message, read_file(path, n=10))
+    if len(nums) == 1:
+        bot.reply_to(message, read_file(path, n=nums[0]))
+    if len(nums) == 2:
+        bot.reply_to(message, read_file(path, n=nums[0], m=nums[1]))
+
+@bot.message_handler(func=lambda x: True)
+def catchall(message):
+    handle_save(message)
     
 def main():
     bot.infinity_polling()
