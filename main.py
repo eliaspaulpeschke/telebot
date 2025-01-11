@@ -81,7 +81,7 @@ def check_user(message):
 
 def process_text(text):
     if (state.datemode):
-       return f"\n({time.time()}) - " + time.strftime("%d.%m.%y - %H:%M:\n") + text
+       return f"\n({time.time()}) - " + time.strftime("%d.%m.%y - %H:%M: ") + text
     else:
         if not text.startswith("\n"): text = "\n" + text
         return text
