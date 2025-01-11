@@ -11,7 +11,8 @@ class Botstate:
     _lang = "de"
 
     def __init__(self) -> None:
-        self.storage_path = dotenv.get_key("./.env", "DATA_STORAGE")
+        dotenv.load_dotenv()
+        self.storage_path = os.environ.get("DATA_STORAGE", "./data.pickle") #.get_key("./.env", "DATA_STORAGE")
         if (os.path.isfile(self.storage_path)):
             with open(self.storage_path, "rb") as objfile:
                 instance = pickle.load(objfile)
@@ -21,15 +22,13 @@ class Botstate:
             print("No storage file found - creating new state from scatch")
 
         #always load these from disk!
-        self.allowed_ids = dotenv.get_key("./.env", "ALLOWED_USERIDS").split(":")
-        self.repo_path = dotenv.get_key("./.env", "REPO_PATH")
-        self.whisper_path = dotenv.get_key("./.env", "WHISPER_PATH")
-        self.whisper_model = dotenv.get_key("./.env", "WHISPER_MODEL")
-
+        self.allowed_ids = os.environ.get("ALLOWED_USERIDS", "").split(":")
+        self.repo_path = os.environ.get("REPO_PATH", "")
+        self.whisper_path = os.environ.get("WHISPER_PATH", "")
+        self.whisper_model = os.environ.get("WHISPER_MODEL", "")
 
         if not os.path.isfile(self.storage_path):
             self.save()
-
 
     def save(self) -> None:
          with open(self.storage_path, "wb") as objfile:
