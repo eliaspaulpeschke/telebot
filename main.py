@@ -4,7 +4,7 @@ import dotenv
 import telebot
 import requests
 import os
-import time
+from datetime import datetime 
 from botstate import Botstate
 
 
@@ -79,9 +79,9 @@ def check_user(message):
         return True
     return False
 
-def process_text(text):
-    if (state.datemode):
-       return f"\n({time.time()}) - " + time.strftime("%d.%m.%y - %H:%M: ") + text
+def process_text(text, add_date = False, override_datemode = False):
+    if (state.datemode or add_date and not override_datemode):
+        return f"\n {datetime.now().isoformat()}: " + text
     else:
         if not text.startswith("\n"): text = "\n" + text
         return text
@@ -208,9 +208,7 @@ def handle_note(message):
     if not check_user(message): return
     text = message.text.removeprefix("/notes")
     text = text.removeprefix("/note")
-    if state.datemode == False:
-        text = time.strftime("\n%d.%m.%y - %H:%M:\n") + text
-    text = process_text(text)
+    text = process_text(text, add_date=True)
     save_text(text, "notes.md")
     bot.reply_to(message, f"Added to notes.md")
     
@@ -219,12 +217,10 @@ def handle_daily(message):
     global state
     if not check_user(message): return
     text = message.text.removeprefix("/daily")
-    if state.datemode == False:
-        text = time.strftime("\n%H:%M\n") + text
-    text = process_text(text)
-    save_text(text, time.strftime("%d_%m_%y.md"))
-    bot.reply_to(message, f"Added to {time.strftime('%d_%m_%y.md')}")
-
+    text = process_text(text, add_date=True)
+    filename = datetime.now().strftime("%d_%m_%y.md")
+    save_text(text, filename)
+    bot.reply_to(message, f"Added to {filename}")
 
 @bot.message_handler(content_types=['text'], commands=['mv'])
 def handle_move(message):
