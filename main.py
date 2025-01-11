@@ -293,6 +293,7 @@ def handle_tail(message):
 
 @bot.message_handler(func=lambda x: True)
 def catchall(message):
+    if message.text.startswith("/"): return
     handle_save(message)
     
 def main():
