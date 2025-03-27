@@ -112,9 +112,9 @@ def change_name(message):
     global state
     if not check_user(message): return
     if (message.text == "/name now"):
-        state.file = time.strftime("%d_%m_%y_%H_%M.md")
+        state.file = datetime.now().strftime("%d_%m_%y_%H_%M.md")
     elif (message.text == "/name today" or message.text == "/name daily"):
-        state.file = time.strftime("%d_%m_%y.md")
+        state.file = datetime.now().strftime("%d_%m_%y.md")
     else:
         name = str(message.text)
         name = name.removeprefix("/name")
